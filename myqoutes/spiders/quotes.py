@@ -6,7 +6,7 @@ class QuotesSpider(RedisSpider):
     redis_key = "quotes:start_urls"
 
     def parse(self, response):
-        self.logger.info(f"本次请求 UA 尾部: {response.request.headers.get('User-Agent')!r} ... 截取判断")
+        # self.logger.info(f"本次请求 UA 尾部: {response.request.headers.get('User-Agent')!r} ... 截取判断")
         for quote in response.css("div.quote"):
             yield QuoteItem(
                 text=quote.css("span.text::text").get(),

@@ -94,9 +94,9 @@ FEEDS = {
     "out.json": {'format': 'json', 'encoding': 'utf-8', 'overwrite': True},
 }
 
-# SCHEDULER = "scrapy_redis.scheduler.Scheduler"
-# DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
-# REDIS_URL = "redis://127.0.0.1:6379/0"
+SCHEDULER = "scrapy_redis.scheduler.Scheduler"
+DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
+REDIS_URL = "redis://127.0.0.1:6379/0"
 
 RETRY_TIMES = 5
 RETRY_HTTP_CODES = [500, 502, 503, 504, 408, 429]
@@ -107,3 +107,5 @@ MYSQL_PORT = int(os.environ.get("MYSQL_PORT", "3306"))
 MYSQL_USER = os.environ.get("MYSQL_USER", "root")
 MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD", "")
 MYSQL_DB = os.environ.get("MYSQL_DB", "crawler_lab")
+
+LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
