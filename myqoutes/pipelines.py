@@ -5,6 +5,10 @@ import pymysql
 
 logger = logging.getLogger(__name__)
 
+def make_fingerprint(text):
+    """对文本计算 md5 指纹，用于数据库防重"""
+    return hashlib.md5(text.encode('utf-8')).hexdigest()
+
 class MySQLPipeline:
     def __init__(self, settings, crawler):
         self.settings = settings
@@ -28,7 +32,7 @@ class MySQLPipeline:
         self.cursor = self.conn.cursor()
 
     def process_item(self, item):
-        text_hash = hashlib.md5(item['text'].encode('utf-8')).hexdigest()
+        text_hash = make_fingerprint(item['text'])
         sql = """
             INSERT INTO quotes(text_hash, text, author) 
             VALUES (%s, %s, %s)
