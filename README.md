@@ -50,22 +50,37 @@
 - `RETRY_TIMES=5`，429/5xx 自动重试；
 - `AUTOTHROTTLE_ENABLED`：根据网站响应自适应降速。
 
+### 5. 配置分离与依赖注入
+- 数据库密码走**环境变量**（`MYSQL_PASSWORD`），代码仓库零明文密钥；
+- Pipeline 通过 `from_crawler` 拿 crawler.settings 注入配置，并已适配新版 Scrapy 的钩子签名（无 spider 参数）；
+- 指纹计算抽成独立函数 `make_fingerprint`，纯逻辑与 IO 解耦，可独立测试。
+
+### 6. 单元测试
+- pytest 覆盖指纹生成逻辑（正确性 / 稳定性 / 区分度三组断言）；
+- `python -m pytest tests -v` 一键验证，不依赖真实数据库。
+
 ## 运行
 
+完整分步搭建指南（虚拟环境 → 数据库 → 环境变量 → 分布式运行 → 测试）见 **[docs/SETUP.md](docs/SETUP.md)**，每一步都标注了"在干嘛"。
+
+快速开始：
+
 ```bash
-# 1. 启动 Redis / MySQL（本地或 Docker）
-# 2. 建表见 crawler-lab/init/01_schema.sql 的 quotes 部分
-pip install scrapy scrapy-redis "redis==6.4.0" pymysql
+pip install -r requirements.txt
 
-# 3. 下发起始任务
+# 启动 Redis / MySQL（docker compose up -d 或本地服务）
+mysql -uroot -p < init/01_schema.sql && mysql -uroot -p < init/02_quotes.sql
+setx MYSQL_PASSWORD "你的MySQL密码"    # 重开终端生效
+
+# 下发任务 + 开 N 个终端跑 worker
 redis-cli LPUSH quotes:start_urls http://quotes.toscrape.com/
-
-# 4. 开 N 个终端各跑一个 worker（分布式）
 python -m scrapy crawl quotes
 
-# 5. 验证
-mysql> SELECT COUNT(*) FROM crawler_lab.quotes;   -- 100
-# 重复跑第 3、4 步，COUNT 恒为 100
+# 验证：重复跑 COUNT 恒为 100
+mysql -e "SELECT COUNT(*) FROM crawler_lab.quotes;"
+
+# 单元测试
+python -m pytest tests -v
 ```
 
 ## 踩坑记录（真实调试过程）
@@ -79,4 +94,4 @@ mysql> SELECT COUNT(*) FROM crawler_lab.quotes;   -- 100
 
 ## 技术栈
 
-`Python 3.14` · `Scrapy 2.13` · `scrapy-redis 0.9` · `Redis 5` · `MySQL 8.0` · `pymysql`
+`Python 3.14` · `Scrapy 2.19` · `scrapy-redis 0.9` · `Redis 5/7` · `MySQL 8.0` · `pytest` · `Docker Compose`
