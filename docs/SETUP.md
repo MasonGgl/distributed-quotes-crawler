@@ -126,5 +126,8 @@ python -m pytest tests -v
 | `ModuleNotFoundError: myqoutes` | pytest 不在项目根执行 | cd 到 conftest.py 所在目录再跑 |
 | 爬虫能跑但 MySQL 报连接拒绝 | 环境变量没生效 | `setx` 后必须重开终端；临时验证用 `$env:MYSQL_PASSWORD="..."` |
 | 两个 worker 只有一个在干活 | 任务被先启动的 worker 抢完了 | 正常现象；任务池空了再 LPUSH 种子 |
+| 容器里 quotes 表不存在 | initdb 目录的 SQL **只在数据卷首次初始化时执行**，后补的文件不会自动跑 | `docker cp` SQL 进容器，再 `mysql -e "source /tmp/xx.sql"` 手动执行 |
+| SQL 过 PowerShell 管道执行报 `??????` 语法错 | PS 5.1 管道按 GBK 重新编码，SQL 里的中文注释乱码并破坏引号配对 | 别让字节穿 PowerShell 管道：`docker cp` + 容器内 `source` |
+| 表的 COMMENT 注释显示乱码 | 建表时客户端编码不对，乱码已被写死进表定义 | `DROP TABLE` 后用正确编码（docker cp + source）重建；先确认表内无数据 |
 
 更多真实踩坑记录见 [README](../README.md)。
