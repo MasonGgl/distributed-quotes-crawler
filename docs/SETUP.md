@@ -118,6 +118,43 @@ python -m pytest tests -v
 
 **在干嘛：** 测试不碰真数据库——指纹函数是纯逻辑直接断言。`3 passed` 即通过。注意要在项目根（有 `conftest.py` 的目录）执行。
 
+## 第 10 步（进阶）· 把爬虫本身打包成镜像
+
+前面几步的爬虫跑在宿主机上，数据库跑在容器里。最后一步：让爬虫也成为镜像，实现"任何装了 Docker 的机器，clone 下来就能跑"。
+
+项目根的 `Dockerfile`：
+
+```dockerfile
+FROM python:3.14-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+COPY . .
+CMD ["python", "-m", "scrapy", "crawl", "quotes"]
+```
+
+要点：
+- **依赖与源码分开 COPY**：依赖层不常变，改动代码后重建镜像时跳过装依赖（层缓存）
+- **清华 pip 源**：容器不出网走代理，直连 PyPI 慢
+- **CMD 用 JSON 数组格式**：Dockerfile 惯例
+
+构建与运行：
+
+```powershell
+docker build -t myquotes .
+
+# 加入 compose 自动创建的网络，用服务名访问 redis/mysql（容器里没有 localhost）
+docker run --rm --network crawler-lab_default `
+  -e MYSQL_PASSWORD=你的密码 `
+  -e MYSQL_HOST=mysql `
+  -e REDIS_URL=redis://redis:6379/0 `
+  myquotes
+```
+
+**关键概念：容器里的 localhost 是它自己。** 要访问 compose 里的其他服务，必须加入同一张 Docker 网络，并用**服务名**当主机名——这正是 settings.py 里 `MYSQL_HOST`、`REDIS_URL` 都做成环境变量的原因：一份代码，宿主机/容器两种活法。
+
+> 拉镜像超时/报 `failed to fetch anonymous token`：Docker 引擎不走系统代理，需在 Docker Desktop → Settings → Resources → Proxies 单独配置。
+
 ## 常见问题
 
 | 现象 | 原因 | 解法 |

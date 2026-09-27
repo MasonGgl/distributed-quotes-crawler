@@ -96,7 +96,7 @@ FEEDS = {
 
 SCHEDULER = "scrapy_redis.scheduler.Scheduler"
 DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
-REDIS_URL = "redis://127.0.0.1:6379/0"
+REDIS_URL = os.environ.get("REDIS_URL", "redis://127.0.0.1:6379/0")
 
 RETRY_TIMES = 5
 RETRY_HTTP_CODES = [500, 502, 503, 504, 408, 429]
