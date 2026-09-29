@@ -83,6 +83,18 @@ mysql -e "SELECT COUNT(*) FROM crawler_lab.quotes;"
 python -m pytest tests -v
 ```
 
+## examples · 接口爬虫对照示例
+
+`examples/api_quotes.py` 是同站的**接口直连版**：不解析 HTML，直接请求抓包定位的数据接口
+`/api/quotes?page=N`，按返回的 `has_next` 字段翻页，解析 JSON 提取数据。
+
+```bash
+python examples/api_quotes.py    # 100 条 / 10 页，结果与 Scrapy 版一致
+```
+
+两种路线的取舍：接口爬虫无需选择器、数据结构化、抗页面改版，但**前提是能通过抓包找到接口**；
+页面渲染型站点（数据不在接口里）仍走 HTML 解析。抓包定位能力见 `docs/SETUP.md`。
+
 ## 踩坑记录（真实调试过程）
 
 | 坑 | 原因 | 解法 |
